@@ -1,0 +1,47 @@
+// Skeleton Code for Arduino
+// Two EMG signals will be collected (one from forearm flexor + one from forearm extensor)
+
+// Variables
+bool open_Gripper;     // determines direction of motor
+                       // true = gripper opens = clockwise (can be changed)
+                       // false = gripper closes = counter-clockwised (can be changed)
+bool spin_motor        // true = permit motor movement, false = prevent motor movement
+
+// When forearm lifts (forearm flexors contracts) >> gripper must close
+// Detecting "1" in DC signal (binary output) from forearm flexor EMG
+if (EMG signal of forearm flexor = 1) {
+  open_Gripper = false;
+}
+
+// When forearm drops (forearm flexors contracts) >> gripper must open
+// Detecting "1" in DC signal (binary output) from forearm extensor EMG
+else if (EMG signal of forearm extensor = 1) {
+    open_Gripper = true;
+}
+
+// Catch all - do not permit changes to current state of arm if previous conditions were not met
+else {
+  bool spin_motor = false;
+}
+
+
+// do actions based on bool variables
+if (spin_motor) {
+  if (open_Gripper) {
+    spin clockwise
+  }
+  else {
+    spin counter-clockwise
+  }
+}
+else {
+  do nothing
+} 
+
+
+
+///////////////////////
+Potential Issues
+- How to ensure only a maximum of 47 degrees of spinning occurs
+- How to have a pressure sensor in the motor such that it will  not spin if the gripper has already gripped the pill bottle
+  
