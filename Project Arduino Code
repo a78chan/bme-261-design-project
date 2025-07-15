@@ -1,1 +1,68 @@
 
+// Signal Processing and Control Center
+#include <Servo.h>
+
+// Locations of all Input Components
+int comparatorInput_relax = 2;
+int comparatorInput_open = 3;
+int comparatorInput_close = 4;
+Servo gripperDriver;
+
+// Variables to determine motor attributes
+bool relaxedGrip = false;
+bool looseGrip = false;
+bool tightGrip = false;
+int angle = 0; 				// 0 to 47 degrees clockwise limit
+
+void setup()
+{
+  pinMode(comparatorInput_relax, INPUT);
+  pinMode(comparatorInput_close, INPUT);
+  pinMode(comparatorInput_open, INPUT);
+  gripperDriver.attach(7);
+  gripperDriver.write(0);
+  Serial.begin(9600);
+}
+
+void loop()
+{
+  if (digitalRead(comparatorInput_open)== HIGH) {         // Must open gripper = clockwise spin of 47 degrees required
+    Serial.println("Strong grip sensed - opening gripper");
+	relaxedGrip = false;
+	looseGrip = false;
+	tightGrip = true;  
+  }
+  else if (digitalRead(comparatorInput_close) == HIGH) {   // Must close gripper = counter-clockwise spin of 47 degrees required
+    Serial.println("Weak grip sensed - closing gripper");
+    relaxedGrip = false;
+	looseGrip = true;
+	tightGrip = false;
+  }
+  else if (digitalRead(comparatorInput_relax) == HIGH) {   // Relaxed = no spinning of motor
+    Serial.println("No grip sensed - stopping gripper movement");
+  	relaxedGrip = true;
+	looseGrip = false;
+	tightGrip = false;
+  }          
+  
+  // Control Motor
+  if (looseGrip == true){            // Have Gear turn counter-clockwise 47 degrees to close gripper
+    if (angle > 0) {				 // Only allow gripper to close if rotation is not less than 0 degrees
+    	angle--;
+    }
+    Serial.println(angle);
+  }
+  else if (tightGrip == true) {      // Have gear turn clockwise 47 degrees to open gripper
+  	if (angle < 47) {				 // Only allow gripper to open if rotation is not more than 47 degrees
+      	angle++;
+    }
+    Serial.println(angle);
+  }
+  else if (relaxedGrip == true) {    // No motor movement
+  }  
+  
+  // Update Motor Position
+  gripperDriver.write(angle);
+  delay(50);
+}
+           
