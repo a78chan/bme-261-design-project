@@ -1,9 +1,7 @@
 #include <Servo.h>
 
-// Binary digital input pins (expecting 0 or 1 values)
-const int comparatorInput_relax = 2;
-const int comparatorInput_open = 3;
-const int comparatorInput_close = 4;
+// Binary digital input pin (expecting 0 or 1 values)
+const int comparatorInput = A0;
 
 Servo gripperDriver;
 
@@ -16,9 +14,7 @@ bool tightGrip = false;
 int angle = 0;
 
 void setup() {
-  pinMode(comparatorInput_relax, INPUT);
-  pinMode(comparatorInput_close, INPUT);
-  pinMode(comparatorInput_open, INPUT);
+  pinMode(comparatorInput, INPUT);
   gripperDriver.attach(7);
   gripperDriver.write(0);  // Start at 0 degrees
   Serial.begin(9600);
@@ -26,34 +22,24 @@ void setup() {
 
 void loop() {
   // Read binary input signals (0 or 1)
-  int relaxSignal = digitalRead(comparatorInput_relax);
-  int closeSignal = digitalRead(comparatorInput_close);
-  int openSignal  = digitalRead(comparatorInput_open);
-  Serial.print("Relaxed Signal: ");  Serial.print(relaxSignal);
-  Serial.print("Closed Signal: ");   Serial.print(closeSignal);
-  Serial.print("Opened Signal: ");   Serial.print(openSignal);
-
+  float signalValue = analogRead(comparatorInput)*(5.0/1023.0);
+  Serial.print("Signal Voltage (mV): ");  Serial.print(signalValue);
+  Serial.print("\n");
   // Binary signal-based control logic
-  if (openSignal != 0) {  // Binary HIGH (1)
-    Serial.println("Binary: 1 detected on OPEN — opening gripper");
+  if (signalValue > 2.5) {  // Binary HIGH (1)
+    //Serial.println("Opening gripper (clockwise)");
     relaxedGrip = false;
     looseGrip = false;
     tightGrip = true;
 
-  } else if (closeSignal != 0) {  // Binary HIGH (1)
-    Serial.println("Binary: 1 detected on CLOSE — closing gripper");
+  } else if (signalValue > 0) {  // Binary HIGH (1)
+    //Serial.println("Closing gripper (counter-clockwise)");
     relaxedGrip = false;
     looseGrip = true;
     tightGrip = false;
 
-  } else if (relaxSignal != 0) {  // Binary HIGH (1)
-    Serial.println("Binary: 1 detected on RELAX — pausing movement");
-    relaxedGrip = true;
-    looseGrip = false;
-    tightGrip = false;
-
   } else {
-    Serial.println("All binary signals = 0 — default to relaxed");
+    //Serial.println("No movement (pause motor)");
     relaxedGrip = true;
     looseGrip = false;
     tightGrip = false;
@@ -61,15 +47,15 @@ void loop() {
 
   // Control gripper angle based on logic
   if (looseGrip && angle > 0) {
-    angle--;
+    angle -= 3;
     Serial.print("Closing: Angle = "); Serial.println(angle);
   }
   else if (tightGrip && angle < 47) {
-    angle+;
+    angle += 3;
     Serial.print("Opening: Angle = "); Serial.println(angle);
   }
 
   // Send angle to servo
   gripperDriver.write(angle);
-  delayMicroseconds(200);  // Small delay for signal stability
+  delayMicroseconds(1);  // Small delay for signal stability
 }
